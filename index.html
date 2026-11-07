@@ -19,6 +19,10 @@ html, body {
     background: #000;
 }
 
+body {
+    position: relative;
+}
+
 /* Background slideshow */
 
 .background {
@@ -28,12 +32,24 @@ html, body {
     height: 100%;
     object-fit: cover;
     opacity: 0;
+    transform: scale(1);
     transition: opacity 2s ease-in-out;
     z-index: 0;
 }
 
 .background.active {
     opacity: 1;
+    animation: slowZoomOut 20s linear forwards;
+}
+
+@keyframes slowZoomOut {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(0.8);
+    }
 }
 
 /* Dark overlay */
@@ -46,7 +62,32 @@ html, body {
     pointer-events: none;
 }
 
-/* Logo - anchored to actual viewport */
+/* Bright blurred transition */
+
+.transition-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    background: rgba(255, 255, 255, 0);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition:
+        opacity 1s ease,
+        backdrop-filter 1s ease,
+        -webkit-backdrop-filter 1s ease,
+        background 1s ease;
+}
+
+.transition-flash.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Logo */
 
 .logo-container {
     position: fixed !important;
@@ -68,12 +109,6 @@ html, body {
     max-height: 120px;
     object-fit: contain;
 }
-
-/* Keep the loading screen full screen */
-
-body {
-    position: relative;
-}
 </style>
 </head>
 
@@ -83,6 +118,7 @@ body {
 <img id="background2" class="background" src="assets/ld2.png">
 
 <div class="overlay"></div>
+<div class="transition-flash"></div>
 
 <div class="logo-container">
     <img class="logo" src="assets/logo.gif" alt="Logo">
@@ -93,6 +129,7 @@ body {
 </audio>
 
 <script>
+
 /* Background slideshow */
 
 const images = [
@@ -103,6 +140,7 @@ const images = [
 
 const background1 = document.getElementById("background1");
 const background2 = document.getElementById("background2");
+const flash = document.querySelector(".transition-flash");
 
 let currentImage = 0;
 let showingFirst = true;
@@ -113,13 +151,26 @@ function changeBackground() {
     const next = showingFirst ? background2 : background1;
     const previous = showingFirst ? background1 : background2;
 
-    next.src = images[currentImage];
-
     next.onload = () => {
         next.classList.add("active");
         previous.classList.remove("active");
+
+        flash.classList.add("active");
+
+        setTimeout(() => {
+            flash.classList.remove("active");
+        }, 1000);
+
         showingFirst = !showingFirst;
     };
+
+    next.src = images[currentImage];
+
+    // Handle images already cached by the browser
+    if (next.complete && next.naturalWidth > 0) {
+        next.onload();
+        next.onload = null;
+    }
 }
 
 setInterval(changeBackground, 20000);
@@ -158,6 +209,7 @@ document.addEventListener("visibilitychange", () => {
         startMusic();
     }
 });
+
 </script>
 
 </body>
