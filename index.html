@@ -54,7 +54,10 @@ body {
 
 .background.active {
     opacity: 1;
-    animation: slowZoomIn 20s linear forwards;
+}
+
+.background.zooming {
+    animation: slowZoomIn 24s linear forwards;
 }
 
 @keyframes slowZoomIn {
@@ -63,7 +66,7 @@ body {
     }
 
     to {
-        transform: scale(1.15);
+        transform: scale(1.18);
     }
 }
 
@@ -127,7 +130,7 @@ body {
 
 <div id="screen">
 
-    <img id="background1" class="background active" src="assets/ld1.png">
+    <img id="background1" class="background active zooming" src="assets/ld1.png">
     <img id="background2" class="background" src="assets/ld2.png">
 
     <div class="overlay"></div>
@@ -188,16 +191,18 @@ function changeBackground() {
         next.onload = null;
         next.onerror = null;
 
-        // Start the incoming image at its original zoom
+        // Reset the incoming image before starting its zoom
         next.style.animation = "none";
         next.style.transform = "scale(1)";
+        next.classList.remove("zooming");
 
         void next.offsetWidth;
 
-        next.style.animation = "";
+        // Start the new image's zoom and fade it in
+        next.classList.add("zooming");
         next.classList.add("active");
 
-        // Fade out the previous image without resetting its zoom
+        // Fade out the previous image, but keep its zoom running
         previous.classList.remove("active");
 
         // Blur and brighten during the transition
@@ -210,14 +215,14 @@ function changeBackground() {
         showingFirst = !showingFirst;
         currentImage = (currentImage + 1) % images.length;
 
-        // Keep the outgoing image zooming underneath the new image
-        // for 2 extra seconds after the fade finishes.
+        // Keep the old image zooming underneath for 2 extra seconds
         setTimeout(() => {
+            previous.classList.remove("zooming");
             previous.style.animation = "none";
             previous.style.transform = "scale(1)";
-        
+
             void previous.offsetWidth;
-        
+
             previous.src = images[(currentImage + 1) % images.length];
         }, 4100);
 
