@@ -1,1 +1,133 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server Loading Screen</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Background slideshow */
+
+.background {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+}
+
+.background.active {
+    opacity: 1;
+}
+
+/* Dark overlay */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Animated GIF */
+
+.logo-container {
+    position: fixed;
+    left: 9%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.logo {
+    width: 160px;
+    height: auto;
+    object-fit: contain;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Background images -->
+
+<img id="background1" class="background active" src="assets/background1.jpg">
+<img id="background2" class="background" src="assets/background2.jpg">
+
+<!-- Dark overlay -->
+
+<div class="overlay"></div>
+
+<!-- Animated logo -->
+
+<div class="logo-container">
+    <img class="logo" src="assets/logo.gif" alt="Server Logo">
+</div>
+
+<!-- Background music -->
+
+<audio id="music" autoplay loop>
+    <source src="assets/music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+/* Background slideshow */
+
+const images = [
+    "assets/background1.jpg",
+    "assets/background2.jpg",
+    "assets/background3.jpg"
+];
+
+let currentImage = 0;
+let showingFirst = true;
+
+const background1 = document.getElementById("background1");
+const background2 = document.getElementById("background2");
+
+function changeBackground() {
+    currentImage = (currentImage + 1) % images.length;
+
+    const nextBackground = showingFirst ? background2 : background1;
+    const currentBackground = showingFirst ? background1 : background2;
+
+    nextBackground.src = images[currentImage];
+    nextBackground.classList.add("active");
+    currentBackground.classList.remove("active");
+
+    showingFirst = !showingFirst;
+}
+
+/* Change background every 20 seconds */
+
+setInterval(changeBackground, 20000);
+
+/* Background music */
+
+const music = document.getElementById("music");
+
+music.volume = 0.35;
+
+music.play().catch(() => {
+    console.log("Audio autoplay was blocked by the browser.");
+});
+
+</script>
+
+</body>
+</html>
