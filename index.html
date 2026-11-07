@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loading...</title>
+<title>Server Loading Screen</title>
 
 <style>
 * {
@@ -23,18 +23,33 @@ body {
     position: relative;
 }
 
+/* Screen scaling */
+
+#screen {
+    position: absolute;
+    width: 1920px;
+    height: 1080px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(var(--screen-scale, 1));
+    transform-origin: center;
+    overflow: hidden;
+    background: #000;
+}
+
 /* Background slideshow */
 
 .background {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
+    width: 1920px;
+    height: 1080px;
     object-fit: cover;
     opacity: 0;
+    z-index: 0;
     transform: scale(1);
     transition: opacity 2s ease-in-out;
-    will-change: transform, opacity;
+    will-change: opacity, transform;
 }
 
 .background.active {
@@ -55,46 +70,20 @@ body {
 /* Dark overlay */
 
 .overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.3);
     z-index: 1;
     pointer-events: none;
 }
 
-/* Bright blurred transition */
-
-.transition-flash {
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0;
-    background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-    transition: all 1s ease;
-}
-
-.transition-flash.active {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
 /* Logo */
 
 .logo-container {
-    position: fixed !important;
-    left: 35px !important;
-    bottom: 30px !important;
-    top: auto !important;
-    right: auto !important;
-    transform: none !important;
-    width: auto;
-    height: auto;
-    z-index: 10;
+    position: absolute;
+    left: 90px;
+    bottom: 70px;
+    z-index: 2;
     pointer-events: none;
 }
 
@@ -110,21 +99,37 @@ body {
 
 <body>
 
-<img id="background1" class="background active" src="assets/ld1.png">
-<img id="background2" class="background" src="assets/ld2.png">
+<div id="screen">
 
-<div class="overlay"></div>
-<div class="transition-flash"></div>
+    <img id="background1" class="background active" src="assets/ld1.png">
+    <img id="background2" class="background" src="assets/ld2.png">
 
-<div class="logo-container">
-    <img class="logo" src="assets/logo.gif" alt="Logo">
+    <div class="overlay"></div>
+
+    <div class="logo-container">
+        <img class="logo" src="assets/logo.gif" alt="Server Logo">
+    </div>
+
 </div>
 
-<audio id="music" loop preload="auto">
-    <source src="assets/music.mp3" type="audio/mpeg">
-</audio>
+<audio id="music" loop preload="auto" src="assets/music.mp3"></audio>
 
 <script>
+
+const screen = document.getElementById("screen");
+
+function resizeScreen() {
+    const scale = Math.min(
+        window.innerWidth / 1920,
+        window.innerHeight / 1080
+    );
+
+    screen.style.setProperty("--screen-scale", scale);
+}
+
+window.addEventListener("resize", resizeScreen);
+resizeScreen();
+
 
 /* Background slideshow */
 
@@ -136,58 +141,59 @@ const images = [
 
 const background1 = document.getElementById("background1");
 const background2 = document.getElementById("background2");
-const flash = document.querySelector(".transition-flash");
 
 let currentImage = 0;
 let showingFirst = true;
 
+// Preload the first two images
+background1.src = images[0];
+background2.src = images[1];
+
 function changeBackground() {
+    if (images.length < 2) return;
+
     currentImage = (currentImage + 1) % images.length;
 
     const next = showingFirst ? background2 : background1;
     const previous = showingFirst ? background1 : background2;
 
-    next.classList.remove("active");
-    next.style.animation = "none";
-    next.style.transform = "scale(1)";
+    let handled = false;
 
-    const showNext = () => {
+    function showNext() {
+        if (handled) return;
+        handled = true;
+
         next.onload = null;
 
-        // Reset zoom before starting the new animation
+        // Reset the incoming image's zoom
+        next.classList.remove("active");
         next.style.animation = "none";
         next.style.transform = "scale(1)";
 
-        // Force browser to apply reset
+        // Force the browser to apply the reset
         void next.offsetWidth;
 
-        next.classList.add("active");
+        // Start the new image and its zoom animation
         next.style.animation = "";
+        next.classList.add("active");
 
+        // Fade out the previous image
         previous.classList.remove("active");
 
-        flash.classList.add("active");
-
-        setTimeout(() => {
-            flash.classList.remove("active");
-        }, 1000);
-
         showingFirst = !showingFirst;
-    };
+    }
 
     next.onload = showNext;
-    next.onerror = () => {
-        console.error("Could not load background:", images[currentImage]);
-        next.onload = null;
-    };
 
     next.src = images[currentImage];
 
+    // Handle cached images
     if (next.complete && next.naturalWidth > 0) {
         showNext();
     }
 }
 
+// Change image every 20 seconds
 setInterval(changeBackground, 20000);
 
 
