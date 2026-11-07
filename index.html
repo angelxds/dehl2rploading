@@ -25,7 +25,7 @@ body {
 
 /* Background slideshow */
 
-.background-image {
+.background {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -34,20 +34,21 @@ body {
     opacity: 0;
     transform: scale(1);
     transition: opacity 2s ease-in-out;
+    will-change: transform, opacity;
 }
 
-.background-image.active {
+.background.active {
     opacity: 1;
-    animation: slowPanZoomIn 20s linear forwards;
+    animation: slowZoomIn 20s linear forwards;
 }
 
-@keyframes slowPanZoomIn {
+@keyframes slowZoomIn {
     from {
         transform: scale(1);
     }
 
     to {
-        transform: scale(1.25);
+        transform: scale(1.15);
     }
 }
 
@@ -72,11 +73,7 @@ body {
     background: rgba(255, 255, 255, 0);
     backdrop-filter: blur(0px);
     -webkit-backdrop-filter: blur(0px);
-    transition:
-        opacity 1s ease,
-        backdrop-filter 1s ease,
-        -webkit-backdrop-filter 1s ease,
-        background 1s ease;
+    transition: all 1s ease;
 }
 
 .transition-flash.active {
@@ -150,8 +147,23 @@ function changeBackground() {
     const next = showingFirst ? background2 : background1;
     const previous = showingFirst ? background1 : background2;
 
-    next.onload = () => {
+    next.classList.remove("active");
+    next.style.animation = "none";
+    next.style.transform = "scale(1)";
+
+    const showNext = () => {
+        next.onload = null;
+
+        // Reset zoom before starting the new animation
+        next.style.animation = "none";
+        next.style.transform = "scale(1)";
+
+        // Force browser to apply reset
+        void next.offsetWidth;
+
         next.classList.add("active");
+        next.style.animation = "";
+
         previous.classList.remove("active");
 
         flash.classList.add("active");
@@ -163,12 +175,16 @@ function changeBackground() {
         showingFirst = !showingFirst;
     };
 
+    next.onload = showNext;
+    next.onerror = () => {
+        console.error("Could not load background:", images[currentImage]);
+        next.onload = null;
+    };
+
     next.src = images[currentImage];
 
-    // Handle images already cached by the browser
     if (next.complete && next.naturalWidth > 0) {
-        next.onload();
-        next.onload = null;
+        showNext();
     }
 }
 
@@ -194,15 +210,12 @@ function startMusic() {
     });
 }
 
-// Attempt autoplay
 window.addEventListener("load", startMusic);
 
-// Retry when the player interacts
 document.addEventListener("pointerdown", startMusic);
 document.addEventListener("keydown", startMusic);
 document.addEventListener("touchstart", startMusic);
 
-// Retry if the loading screen becomes visible again
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden && !musicStarted) {
         startMusic();
