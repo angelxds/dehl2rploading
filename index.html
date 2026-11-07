@@ -77,13 +77,39 @@ body {
     pointer-events: none;
 }
 
+/* Blurred transition */
+
+.transition-blur {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+
+    transition:
+        opacity 900ms ease,
+        background 900ms ease,
+        backdrop-filter 900ms ease,
+        -webkit-backdrop-filter 900ms ease;
+}
+
+.transition-blur.active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
 /* Logo */
 
 .logo-container {
     position: absolute;
     left: 90px;
     bottom: 70px;
-    z-index: 2;
+    z-index: 3;
     pointer-events: none;
 }
 
@@ -105,6 +131,7 @@ body {
     <img id="background2" class="background" src="assets/ld2.png">
 
     <div class="overlay"></div>
+    <div class="transition-blur"></div>
 
     <div class="logo-container">
         <img class="logo" src="assets/logo.gif" alt="Server Logo">
@@ -116,10 +143,12 @@ body {
 
 <script>
 
+/* Screen scaling */
+
 const screen = document.getElementById("screen");
 
 function resizeScreen() {
-    const scale = Math.min(
+    const scale = Math.max(
         window.innerWidth / 1920,
         window.innerHeight / 1080
     );
@@ -141,19 +170,12 @@ const images = [
 
 const background1 = document.getElementById("background1");
 const background2 = document.getElementById("background2");
+const blur = document.querySelector(".transition-blur");
 
 let currentImage = 0;
 let showingFirst = true;
 
-// Preload the first two images
-background1.src = images[0];
-background2.src = images[1];
-
 function changeBackground() {
-    if (images.length < 2) return;
-
-    currentImage = (currentImage + 1) % images.length;
-
     const next = showingFirst ? background2 : background1;
     const previous = showingFirst ? background1 : background2;
 
@@ -164,37 +186,60 @@ function changeBackground() {
         handled = true;
 
         next.onload = null;
+        next.onerror = null;
 
-        // Reset the incoming image's zoom
-        next.classList.remove("active");
+        // Start the incoming image at its original zoom
         next.style.animation = "none";
         next.style.transform = "scale(1)";
 
-        // Force the browser to apply the reset
         void next.offsetWidth;
 
-        // Start the new image and its zoom animation
         next.style.animation = "";
         next.classList.add("active");
 
-        // Fade out the previous image
+        // Fade out the previous image without resetting its zoom
         previous.classList.remove("active");
 
+        // Blur and brighten during the transition
+        blur.classList.add("active");
+
+        setTimeout(() => {
+            blur.classList.remove("active");
+        }, 700);
+
         showingFirst = !showingFirst;
+        currentImage = (currentImage + 1) % images.length;
+
+        // Wait until the previous image is completely invisible
+        // before resetting its zoom and loading the next image
+        setTimeout(() => {
+            previous.style.animation = "none";
+            previous.style.transform = "scale(1)";
+
+            void previous.offsetWidth;
+
+            previous.src = images[(currentImage + 1) % images.length];
+        }, 2100);
+
+        // Give the new image its full 20-second lifespan
+        setTimeout(changeBackground, 20000);
     }
 
-    next.onload = showNext;
-
-    next.src = images[currentImage];
-
-    // Handle cached images
+    // Use an already-loaded image or wait for it
     if (next.complete && next.naturalWidth > 0) {
         showNext();
+    } else {
+        next.onload = showNext;
+
+        next.onerror = () => {
+            console.error("Failed to load background:", next.src);
+            next.onload = null;
+        };
     }
 }
 
-// Change image every 20 seconds
-setInterval(changeBackground, 20000);
+// First transition after 20 seconds
+setTimeout(changeBackground, 20000);
 
 
 /* Music */
