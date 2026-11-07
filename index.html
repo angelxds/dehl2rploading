@@ -210,16 +210,16 @@ function changeBackground() {
         showingFirst = !showingFirst;
         currentImage = (currentImage + 1) % images.length;
 
-        // Wait until the previous image is completely invisible
-        // before resetting its zoom and loading the next image
+        // Keep the outgoing image zooming underneath the new image
+        // for 2 extra seconds after the fade finishes.
         setTimeout(() => {
             previous.style.animation = "none";
             previous.style.transform = "scale(1)";
-
+        
             void previous.offsetWidth;
-
+        
             previous.src = images[(currentImage + 1) % images.length];
-        }, 2100);
+        }, 4100);
 
         // Give the new image its full 20-second lifespan
         setTimeout(changeBackground, 20000);
