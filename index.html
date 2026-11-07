@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,14 +12,12 @@
     box-sizing: border-box;
 }
 
-body {
-    width: 100vw;
-    height: 100vh;
+html, body {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     background: #000;
 }
-
-/* Background slideshow */
 
 .background {
     position: fixed;
@@ -29,6 +26,7 @@ body {
     height: 100%;
     object-fit: cover;
     opacity: 0;
+    z-index: 0;
     transition: opacity 2s ease-in-out;
 }
 
@@ -36,21 +34,20 @@ body {
     opacity: 1;
 }
 
-/* Dark overlay */
-
 .overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    pointer-events: none;
 }
-
-/* Animated GIF */
 
 .logo-container {
     position: fixed;
     left: 9%;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 2;
 }
 
 .logo {
@@ -63,70 +60,68 @@ body {
 
 <body>
 
-<!-- Background images -->
-
-<img id="background1" class="background active" src="assets/background1.jpg">
-<img id="background2" class="background" src="assets/background2.jpg">
-
-<!-- Dark overlay -->
+<img id="background1" class="background active">
+<img id="background2" class="background">
 
 <div class="overlay"></div>
-
-<!-- Animated logo -->
 
 <div class="logo-container">
     <img class="logo" src="assets/logo.gif" alt="Server Logo">
 </div>
-
-<!-- Background music -->
 
 <audio id="music" autoplay loop>
     <source src="assets/music.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-
-/* Background slideshow */
-
 const images = [
     "assets/ld1.png",
     "assets/ld2.png",
     "assets/ld3.png"
 ];
 
-let currentImage = 0;
-let showingFirst = true;
-
 const background1 = document.getElementById("background1");
 const background2 = document.getElementById("background2");
 
+let currentImage = 0;
+let showingFirst = true;
+
+// Load the first image immediately.
+background1.src = images[0];
+
+// Preload the next image.
+if (images.length > 1) {
+    background2.src = images[1];
+}
+
+background1.onerror = () => console.error("Failed to load:", background1.src);
+background2.onerror = () => console.error("Failed to load:", background2.src);
+
 function changeBackground() {
+    if (images.length < 2) return;
+
     currentImage = (currentImage + 1) % images.length;
 
     const nextBackground = showingFirst ? background2 : background1;
     const currentBackground = showingFirst ? background1 : background2;
 
     nextBackground.src = images[currentImage];
+
     nextBackground.classList.add("active");
     currentBackground.classList.remove("active");
 
     showingFirst = !showingFirst;
 }
 
-/* Change background every 20 seconds */
-
 setInterval(changeBackground, 20000);
 
-/* Background music */
-
+// Music
 const music = document.getElementById("music");
-
 music.volume = 0.35;
 
 music.play().catch(() => {
-    console.log("Audio autoplay was blocked by the browser.");
+    console.log("Music autoplay was blocked.");
 });
-
 </script>
 
 </body>
