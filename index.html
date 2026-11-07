@@ -32,22 +32,22 @@ body {
     height: 100%;
     object-fit: cover;
     opacity: 0;
-    transform: scale(1) translateX(0);
+    transform: scale(1);
     transition: opacity 2s ease-in-out;
 }
 
 .background-image.active {
     opacity: 1;
-    animation: slowPanZoomOut 20s linear forwards;
+    animation: slowPanZoomIn 20s linear forwards;
 }
 
-@keyframes slowPanZoomOut {
-    0% {
-        transform: scale(1.15) translateX(0);
+@keyframes slowPanZoomIn {
+    from {
+        transform: scale(1);
     }
 
-    100% {
-        transform: scale(0.95) translateX(-2%);
+    to {
+        transform: scale(1.25);
     }
 }
 
