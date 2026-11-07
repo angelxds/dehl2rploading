@@ -44,9 +44,8 @@ html, body {
 
 .logo-container {
     position: fixed;
-    left: 9%;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 5%;
+    bottom: 5%;
     z-index: 2;
 }
 
@@ -69,9 +68,7 @@ html, body {
     <img class="logo" src="assets/logo.gif" alt="Server Logo">
 </div>
 
-<audio id="music" autoplay loop>
-    <source src="assets/music.mp3" type="audio/mpeg">
-</audio>
+<audio id="music" autoplay loop preload="auto" src="assets/music.mp3"></audio>
 
 <script>
 const images = [
@@ -86,10 +83,9 @@ const background2 = document.getElementById("background2");
 let currentImage = 0;
 let showingFirst = true;
 
-// Load the first image immediately.
+// Load backgrounds
 background1.src = images[0];
 
-// Preload the next image.
 if (images.length > 1) {
     background2.src = images[1];
 }
@@ -97,6 +93,7 @@ if (images.length > 1) {
 background1.onerror = () => console.error("Failed to load:", background1.src);
 background2.onerror = () => console.error("Failed to load:", background2.src);
 
+// Slideshow
 function changeBackground() {
     if (images.length < 2) return;
 
@@ -117,11 +114,18 @@ setInterval(changeBackground, 20000);
 
 // Music
 const music = document.getElementById("music");
-music.volume = 0.35;
 
-music.play().catch(() => {
-    console.log("Music autoplay was blocked.");
-});
+music.volume = 0.35;
+music.muted = false;
+
+function startMusic() {
+    music.play().catch(error => {
+        console.log("Music playback failed:", error);
+    });
+}
+
+window.addEventListener("load", startMusic);
+document.addEventListener("DOMContentLoaded", startMusic);
 </script>
 
 </body>
